@@ -1,0 +1,15 @@
+Container build and usage steps
+-------------------------------
+
+docker run --name mysql-phabricator -e MYSQL_ROOT_PASSWORD=phabricatormysql \
+    -d mysql:5 \
+    mysqld --ft-min-word-len=3 --innodb-buffer-pool-size=256M \
+	--local-infile=0 --max_allowed_packet=32M \
+	--max-connections=1000 --sql-mode="STRICT_ALL_TABLES" 
+docker build -t graphcore/phabricator .
+docker run --privileged -e MYSQL_ROOT_PASSWORD=phabricatormysql --init \
+	-e SERVER_FQDN=$(hostname -f) -p 8080:80 \
+        --link mysql-phabricator --name phabricator graphcore/phabricator
+
+And follow the prompts! You will be left at a shell that allows you to run arc
+commands.

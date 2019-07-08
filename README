@@ -1,15 +1,23 @@
 Container build and usage steps
 -------------------------------
 
-docker run --name mysql-phabricator -e MYSQL_ROOT_PASSWORD=phabricatormysql \
+export MYSQL_ROOT_PASSWORD=phabricatormysql
+export HTTP_PORT=8008
+
+docker run --name mysql-phabricator \
+    -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
     -d mysql:5 \
     mysqld --ft-min-word-len=3 --innodb-buffer-pool-size=256M \
 	--local-infile=0 --max_allowed_packet=32M \
-	--max-connections=1000 --sql-mode="STRICT_ALL_TABLES" 
-docker build -t graphcore/phabricator .
-docker run --privileged -e MYSQL_ROOT_PASSWORD=phabricatormysql --init \
-	-e SERVER_FQDN=$(hostname -f) -p 8080:80 \
+	--max-connections=1000 --sql-mode="STRICT_ALL_TABLES"
+docker build -t graphcore/phabricator https://github.com/sitsofe/docker-phabricator.git
+docker run -it --privileged -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} --init \
+	-e SERVER_FQDN=$(hostname -f):${HTTP_PORT} -p ${HTTP_PORT}:80 \
         --link mysql-phabricator --name phabricator graphcore/phabricator
 
-And follow the prompts! You will be left at a shell that allows you to run arc
-commands.
+And follow the prompts. You will be left at a shell that allows you to run arc
+commands and the recently created phabricator instance. Use
+docker rm phabricator
+docker stop mysql-phabricator
+docker rm mysql-phabricator
+to throw away the containers when you're done.
